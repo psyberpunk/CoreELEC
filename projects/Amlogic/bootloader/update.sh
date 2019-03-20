@@ -50,6 +50,9 @@ for arg in $(cat /proc/cmdline); do
             SUBDEVICE="Odroid_C2"
             DT_ID="gxbb_p200_2g_odroid_c2"
             ;;
+          *odroid_n2)
+            SUBDEVICE="Odroid_N2"
+            ;;
         esac
       fi
 
