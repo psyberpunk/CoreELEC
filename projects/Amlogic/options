@@ -46,8 +46,7 @@
     KERNEL_TARGET="Image.lzo"
 
   # Kernel extra targets to build
-    KERNEL_UBOOT_EXTRA_TARGET="gxbb_p200.dtb gxbb_p200_2G.dtb gxl_p212_1g.dtb gxl_p212_2g.dtb gxl_p230_2g.dtb
-                               gxm_q200_2g.dtb gxm_q201_1g.dtb gxm_q201_2g.dtb"
+    KERNEL_UBOOT_EXTRA_TARGET="g12b_a311d_4g_odroid_n2.dtb"
 
   # Build Android kernel image using mkbootimg
     BUILD_ANDROID_BOOTIMG="yes"
@@ -59,11 +58,11 @@
     KERNEL_MAKE_EXTRACMD=""
 
   # Additional kernel dependencies
-    KERNEL_EXTRA_DEPENDS_TARGET="device-trees-amlogic"
+    KERNEL_EXTRA_DEPENDS_TARGET=""
 
   # Kernel to use. values can be:
   # default:  default mainline kernel
-    LINUX="amlogic-3.14"
+    LINUX="amlogic-4.9"
 
   # kernel image name
     KERNEL_NAME="kernel.img"
@@ -118,7 +117,7 @@
     KODIPLAYER_DRIVER="libamcodec"
 
   # Modules to install in initramfs for early boot
-    INITRAMFS_MODULES="font softcursor bitblit fbcon dwc_otg"
+    INITRAMFS_MODULES="font softcursor bitblit fbcon"
 
   # additional drivers to install:
   # for a list of additinoal drivers see packages/linux-drivers
@@ -126,7 +125,7 @@
   # e.g. ADDITIONAL_DRIVERS="DRIVER1 DRIVER2"
     ADDITIONAL_DRIVERS="gpu-aml RTL8192CU RTL8192DU RTL8192EU RTL8812AU RTL8814AU RTL8188EU-aml openvfd-driver
                         kvimfan-aml RTL8189ES-aml RTL8189FS-aml RTL8723BS-aml RTL8723DS-aml RTL8822BU-aml
-                        ap6xxx-aml mt7601u-aml mt7603u-aml mt7610u-aml qca9377-aml ssv6xxx-aml"
+                        ap6xxx-aml"
 
   # additional Firmware to use (dvb-firmware, misc-firmware, wlan-firmware)
   # Space separated list is supported,
@@ -164,7 +163,7 @@
   # driver addons to install:
   # for a list of additinoal drivers see packages/linux-driver-addons
   # Space separated list is supported,
-    DRIVER_ADDONS="crazycat_aml dvb-latest"
+    DRIVER_ADDONS=""
 
   # add OOTB support for IR remote
     IR_REMOTE_KEYMAPS="$IR_REMOTE_KEYMAPS odroid wetek_hub wetek_play_2 tanix mecool"
