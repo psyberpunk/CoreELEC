@@ -328,7 +328,7 @@ fi
 
 # gzip
 echo "image: compressing..."
-pigz "${DISK}"
+pigz -f "${DISK}"
 
 # set owner
 if [ -n "${SUDO_USER}" ]; then
