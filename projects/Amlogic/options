@@ -46,7 +46,7 @@
     KERNEL_TARGET="Image.lzo"
 
   # Kernel extra targets to build
-    KERNEL_UBOOT_EXTRA_TARGET="g12b_a311d_4g_odroid_n2.dtb"
+    KERNEL_UBOOT_EXTRA_TARGET=""
 
   # Build Android kernel image using mkbootimg
     BUILD_ANDROID_BOOTIMG="yes"
@@ -55,7 +55,7 @@
     ANDROID_BOOTIMG_OPTIONS="--base 0x0 --kernel_offset 0x1080000"
 
   # Additional kernel make parameters (for example to specify the u-boot loadaddress)
-    KERNEL_MAKE_EXTRACMD=""
+    KERNEL_MAKE_EXTRACMD="dtbs"
 
   # Additional kernel dependencies
     KERNEL_EXTRA_DEPENDS_TARGET=""
