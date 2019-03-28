@@ -2,7 +2,7 @@
 # Copyright (C) 2017-present Team LibreELEC (https://libreelec.tv)
 
 PKG_NAME="RTL8189FS-aml"
-PKG_VERSION="8fa1759"
+PKG_VERSION="8fa1759c779a8b2dec8957b711b9c0a50eb24d4c"
 PKG_SHA256="214b1f8d370b25a4ee8f0cb121f68eac93d4d6b2af53a9d4da707a23b2cc03e1"
 PKG_ARCH="arm aarch64"
 PKG_LICENSE="GPL"
