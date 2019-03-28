@@ -14,6 +14,11 @@ case $hdmimode in
   *)               X=1920 Y=1080 SPLASH="/storage/.config/splash/loading-game.png" ;;
 esac
 
+# Splash screen, not sure if this is the best way to do it, but it works so far, but not as good as I want it too with PPSSPPSDL and advmame :(
+(
+  fbi $SPLASH -noverbose > /dev/null 2>&1
+)&
+
 # Set the variables
 CFG="/storage/.emulationstation/es_settings.cfg"
 SX05RELOG="/storage/sx05re.log"
@@ -46,12 +51,6 @@ case $1 in
         ;;
 esac
 
-
-# Splash screen, not sure if this is the best way to do it, but it works so far, but not as good as I want it too with PPSSPPSDL and advmame :(
-(
-  fbi $SPLASH -noverbose > /dev/null 2>&1
-)&
-
 # Write the command to the log file.
 echo "1st parameter: $1" >> $SX05RELOG 
 echo "2nd Parameter: $2" >> $SX05RELOG 
@@ -72,7 +71,6 @@ else
    eval ${RUNTHIS} >> $SX05RELOG 2>&1
 fi 
 
-
 DEFE=$(sed -n 's|\s*<bool name="BGM" value="\(.*\)" />|\1|p' /storage/.emulationstation/es_settings.cfg)
 
 if [ "$DEFE" == "true" ]; then
@@ -80,8 +78,10 @@ killall mpg123
 /storage/.emulationstation/scripts/bgm.sh
 fi 
 
-
-
-
 # Return to default mode
 /usr/bin/setres.sh
+
+# Splash screen, not sure if this is the best way to do it, but it works so far, but not as good as I want it too with PPSSPPSDL and advmame :(
+(
+  fbi $SPLASH -noverbose > /dev/null 2>&1
+)&
