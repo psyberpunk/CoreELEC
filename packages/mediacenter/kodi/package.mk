@@ -12,6 +12,13 @@ PKG_LONGDESC="A free and open source cross-platform media player."
 PKG_PATCH_DIRS="$KODI_VENDOR"
 
 case $KODI_VENDOR in
+  amlogic-4.9)
+    PKG_VERSION="a2f032b6d3d6766fbf8522c6e56a0bb6bda912fd"
+    PKG_SHA256="8b89533af437f201523dc72bc3ccbadad5a09ad52336606c242bca348c0b4ff3"
+    PKG_URL="https://github.com/CoreELEC/xbmc/archive/$PKG_VERSION.tar.gz"
+    PKG_SOURCE_NAME="kodi-$PKG_VERSION.tar.gz"
+    PKG_PATCH_DIRS="amlogic-4.9"
+    ;;
   raspberrypi)
     PKG_VERSION="newclock5_18.1-Leia"
     PKG_SHA256="22a46122a8e6f5a6507baae8e6be6beaf5a4203358478c94da525187b0681b99"
