@@ -1,0 +1,880 @@
+From bf53c02343b0351a5db41aefc1a39fdf33382643 Mon Sep 17 00:00:00 2001
+From: Portisch <hugo.portisch@yahoo.de>
+Date: Thu, 4 Apr 2019 00:20:31 -0700
+Subject: [PATCH] Team CoreELEC: Update source for linux 4.9 kernel
+
+---
+ Makefile        |   2 +-
+ config.c        | 121 --------------------------------------------
+ config.h        |  47 ++++++++++++++++++
+ irremote.c      | 150 ++++++++++++++++---------------------------------------
+ parsefile.c     | 152 +++++---------------------------------------------------
+ rc_common.h     |  80 +++++++++++++++++++++++++++++
+ remote_config.h | 117 ++++++++++---------------------------------
+ 7 files changed, 208 insertions(+), 461 deletions(-)
+ delete mode 100644 config.c
+ create mode 100644 config.h
+ create mode 100644 rc_common.h
+
+diff --git a/Makefile b/Makefile
+index a3b9490..cf065c5 100644
+--- a/Makefile
++++ b/Makefile
+@@ -1,5 +1,5 @@
+ DEPS = remote_config.h keydefine.h
+-OBJ = irremote.o config.o parsefile.o
++OBJ = irremote.o parsefile.o
+ 
+ %.o: %.c $(DEPS)
+ 	$(CC) -c -o $@ $< $(CFLAGS)
+diff --git a/config.c b/config.c
+deleted file mode 100644
+index 06df5d0..0000000
+--- a/config.c
++++ /dev/null
+@@ -1,121 +0,0 @@
+-#include <stdio.h>
+-#include <fcntl.h>
+-#include <sys/ioctl.h>
+-#include "remote_config.h"
+-
+-#define PRINT_CONFIG
+-
+-//these string must in this order and sync with struct remote_config_t
+-char*  config_item[33] = {
+-    "factory_infcode",
+-    "factory_unfcode",
+-    "factory_code",
+-    "repeat_delay",
+-    "repeat_peroid",
+-    "work_mode",
+-    "mouse_speed",
+-    "repeat_enable",
+-    "release_delay",
+-    "release_fdelay",
+-    "release_sdelay",
+-    "debug_enable",
+-    //sw
+-    "bit_count",
+-    "tw_leader_act",
+-    "tw_bit0",
+-    "tw_bit1",
+-    "tw_bit2",
+-    "tw_bit3",
+-    "tw_repeat_leader",
+-    //reg
+-    "reg_base_gen",
+-    "reg_control",
+-    "reg_leader_act",
+-    "reg_leader_idle",
+-    "reg_repeat_leader",
+-    "reg_bit0_time",
+-
+-    "fn_key_scancode",
+-    "left_key_scancode",
+-    "right_key_scancode",
+-    "up_key_scancode",
+-    "down_key_scancode",
+-    "ok_key_scancode",
+-    "pageup_key_scancode",
+-    "pagedown_key_scancode",
+-};
+-
+-int remote_ioc_table[33] = {
+-    REMOTE_IOC_INFCODE_CONFIG,
+-    REMOTE_IOC_UNFCODE_CONFIG,
+-    REMOTE_IOC_SET_CUSTOMCODE,
+-
+-    REMOTE_IOC_SET_REPEAT_DELAY,
+-    REMOTE_IOC_SET_REPEAT_PERIOD,
+-    REMOTE_IOC_SET_MODE,
+-    REMOTE_IOC_SET_MOUSE_SPEED,
+-
+-    REMOTE_IOC_SET_REPEAT_ENABLE,
+-    REMOTE_IOC_SET_RELEASE_DELAY,
+-    REMOTE_IOC_SET_RELEASE_FDELAY,
+-    REMOTE_IOC_SET_RELEASE_SDELAY,
+-    REMOTE_IOC_SET_DEBUG_ENABLE,
+-    //sw
+-    REMOTE_IOC_SET_BIT_COUNT,
+-    REMOTE_IOC_SET_TW_LEADER_ACT,
+-    REMOTE_IOC_SET_TW_BIT0_TIME,
+-    REMOTE_IOC_SET_TW_BIT1_TIME,
+-    REMOTE_IOC_SET_TW_BIT2_TIME,
+-    REMOTE_IOC_SET_TW_BIT3_TIME,
+-    REMOTE_IOC_SET_TW_REPEATE_LEADER,
+-    //reg
+-    REMOTE_IOC_SET_REG_BASE_GEN,
+-    REMOTE_IOC_SET_REG_CONTROL	,
+-    REMOTE_IOC_SET_REG_LEADER_ACT,
+-    REMOTE_IOC_SET_REG_LEADER_IDLE,
+-    REMOTE_IOC_SET_REG_REPEAT_LEADER,
+-    REMOTE_IOC_SET_REG_BIT0_TIME,
+-
+-    REMOTE_IOC_SET_FN_KEY_SCANCODE,
+-    REMOTE_IOC_SET_LEFT_KEY_SCANCODE,
+-    REMOTE_IOC_SET_RIGHT_KEY_SCANCODE,
+-    REMOTE_IOC_SET_UP_KEY_SCANCODE,
+-    REMOTE_IOC_SET_DOWN_KEY_SCANCODE,
+-    REMOTE_IOC_SET_OK_KEY_SCANCODE,
+-    REMOTE_IOC_SET_PAGEUP_KEY_SCANCODE,
+-    REMOTE_IOC_SET_PAGEDOWN_KEY_SCANCODE,
+-};
+-
+-int set_config(remote_config_t *remote, int device_fd)
+-{
+-    unsigned int i;
+-    unsigned int *para = &remote->factory_infcode;
+-
+-    for (i = 0; i < ARRAY_SIZE(config_item); i++) {
+-        if (para[i] != 0xffffffff) {
+-#ifdef PRINT_CONFIG
+-            switch (i) {
+-            case 2:
+-            case 4:
+-            case 8:
+-            case 9:
+-            case 10:
+-            case 11:
+-            case 12:
+-            case 13:
+-            case 14:
+-            case 15:
+-            case 16:
+-            case 17:
+-                printf("%20s = 0x%x\n", config_item[i], para[i]);
+-                break;
+-            default:
+-                printf("%20s = %d\n", config_item[i], para[i]);
+-                break;
+-            }
+-#endif
+-            ioctl(device_fd, remote_ioc_table[i], &para[i]);
+-        }
+-    }
+-    return 0;
+-}
+diff --git a/config.h b/config.h
+new file mode 100644
+index 0000000..482f104
+--- /dev/null
++++ b/config.h
+@@ -0,0 +1,47 @@
++#ifndef  _CONFIG_H
++#define  _CONFIG_H
++
++#include <stdio.h>
++#include <fcntl.h>
++#include "remote_config.h"
++
++//these string must in this order and sync with struct remote_config_t
++char*  config_item[33] = {
++	"factory_infcode",
++	"factory_unfcode",
++	"factory_code",
++	"repeat_delay",
++	"repeat_peroid",
++	"work_mode",
++	"mouse_speed",
++	"repeat_enable",
++	"release_delay",
++	"release_fdelay",
++	"release_sdelay",
++	"debug_enable",
++	//sw
++	"bit_count",
++	"tw_leader_act",
++	"tw_bit0",
++	"tw_bit1",
++	"tw_bit2",
++	"tw_bit3",
++	"tw_repeat_leader",
++	//reg
++	"reg_base_gen",
++	"reg_control",
++	"reg_leader_act",
++	"reg_leader_idle",
++	"reg_repeat_leader",
++	"reg_bit0_time",
++
++	"fn_key_scancode",
++	"left_key_scancode",
++	"right_key_scancode",
++	"up_key_scancode",
++	"down_key_scancode",
++	"ok_key_scancode",
++	"pageup_key_scancode",
++	"pagedown_key_scancode",
++};
++#endif
+diff --git a/irremote.c b/irremote.c
+index 89290a8..d8671d5 100644
+--- a/irremote.c
++++ b/irremote.c
+@@ -5,13 +5,11 @@
+ #include <memory.h>
+ #include <sys/ioctl.h>
+ #include "remote_config.h"
++#include "rc_common.h"
+ #include "keydefine.h"
+-#define FACTCUSTCODE_MAX 20
+ #define CUSTOM_REMOTE_MAX 20
+ #define MAX_KEY_MAPS 256
+-#define MAX_MOUSE_MAPS 4
+ #define DEVICE_NAME "/dev/amremote"
+-#define DEVICE_KP  "/dev/am_adc_kpd"
+ 
+ unsigned short default_key_map[MAX_KEY_MAPS] = {
+ KEY_0, KEY_1, KEY_2, KEY_3, KEY_4, KEY_5, KEY_6, KEY_7, /*0~7*/
+@@ -51,27 +49,17 @@ KEY_RESERVED, KEY_RESERVED, KEY_RESERVED, KEY_RESERVED, KEY_RESERVED, KEY_RESERV
+ KEY_RESERVED, KEY_RESERVED, KEY_RESERVED, KEY_RESERVED, KEY_RESERVED, KEY_RESERVED, KEY_RESERVED, KEY_RESERVED /*f8~ff*/
+ };
+ 
+-unsigned short default_mouse_map[4] = {
+- //0x10, 0x11, 0x0b, 0x0e 
+- 0xffff, 0xffff, 0xffff, 0xffff
+-};
+-
+-unsigned short adc_map[2] ={0xffff, 0xffff};//left,right
+-unsigned int adc_move_enable = 0;
+-
+-#define ARRAY_SIZE(x) (sizeof(x) / sizeof((x)[0]))
+-
+ int malloc_new_remote(remote_config_t **remote)
+ {
+-    *remote = (remote_config_t *)malloc(sizeof(remote_config_t));
+-    if (!*remote) {
++	*remote = (remote_config_t *)malloc(sizeof(remote_config_t));
++	if (!*remote) {
+         printf("Memory allocation for 'remote' failed!\n");
+         return -1;
+     }
+ 
+     remote_config_t *new_remote = *remote;
+ 
+-    memset(new_remote, 0xff, sizeof(remote_config_t));
++    memset(new_remote, 0, sizeof(remote_config_t));
+ 
+     new_remote->key_map = (unsigned short *)malloc(sizeof(unsigned short) * MAX_KEY_MAPS);
+     if (!new_remote->key_map) {
+@@ -81,30 +69,6 @@ int malloc_new_remote(remote_config_t **remote)
+ 
+     memset(new_remote->key_map, KEY_RESERVED, sizeof(unsigned short) * MAX_KEY_MAPS);
+ 
+-    new_remote->mouse_map = (unsigned short *)malloc(sizeof(unsigned short) * MAX_MOUSE_MAPS);
+-    if (!((remote_config_t *)*remote)->mouse_map) {
+-        printf("Memory allocation for 'mouse_map' failed!\n");
+-        return -1;
+-    }
+-
+-    memset(new_remote->mouse_map, 0xFFFF, sizeof(unsigned short) * MAX_MOUSE_MAPS);
+-
+-    new_remote->repeat_key_map = (unsigned short *)malloc(sizeof(unsigned short) * MAX_KEY_MAPS);
+-    if (!new_remote->repeat_key_map) {
+-        printf("Memory allocation for 'repeat_key_map' failed!\n");
+-        return -1;
+-    }
+-
+-    memset(new_remote->repeat_key_map, KEY_RESERVED, sizeof(unsigned short) * MAX_KEY_MAPS);
+-
+-    new_remote->factory_customercode_map = (unsigned int *)malloc(sizeof(unsigned int) * FACTCUSTCODE_MAX);
+-    if (!new_remote->factory_customercode_map) {
+-        printf("Memory allocation for 'repeat_key_map' failed!\n");
+-        return -1;
+-    }
+-
+-    memset(new_remote->factory_customercode_map, 0xFFFFFFFF, sizeof(unsigned int) * FACTCUSTCODE_MAX);
+-
+     return 0;
+ }
+ 
+@@ -114,24 +78,6 @@ void free_remote(remote_config_t **remote)
+ 
+     if (free_remote)
+     {
+-        if (free_remote->factory_customercode_map)
+-        {
+-            free(free_remote->factory_customercode_map);
+-            free_remote->factory_customercode_map = NULL;
+-        }
+-
+-        if (free_remote->repeat_key_map)
+-        {
+-            free(free_remote->repeat_key_map);
+-            free_remote->repeat_key_map = NULL;
+-        }
+-
+-        if (free_remote->mouse_map)
+-        {
+-            free(free_remote->mouse_map);
+-            free_remote->mouse_map = NULL;
+-        }
+-
+         if (free_remote->key_map)
+         {
+             free(free_remote->key_map);
+@@ -148,8 +94,7 @@ int main(int argc, char* argv[])
+     remote_config_t *remotes[CUSTOM_REMOTE_MAX] = { NULL };
+     FILE *fp;
+     int i, j;
+-    int device_fd;
+-    unsigned int val;
++    int device_fd;	
+ 
+     device_fd = open(DEVICE_NAME, O_RDWR);
+ 
+@@ -170,7 +115,6 @@ int main(int argc, char* argv[])
+                 remote->repeat_delay = 250;
+                 remote->repeat_peroid = 33;
+                 memcpy(remote->key_map, default_key_map, sizeof(unsigned short) * MAX_KEY_MAPS);
+-                memcpy(remote->mouse_map, default_mouse_map, sizeof(unsigned short) * MAX_MOUSE_MAPS);
+                 remotes[0] = remote;
+             }
+         }
+@@ -188,40 +132,48 @@ int main(int argc, char* argv[])
+         fclose(fp);
+         }
+ 
+-    ioctl(device_fd, REMOTE_IOC_RESET_KEY_MAPPING, NULL);
+-
+-    for (j = 0; j < CUSTOM_REMOTE_MAX; j++)
++    for (i = 0; i < CUSTOM_REMOTE_MAX; i++)
+     {
+-        remote_config_t *custom_remote = remotes[j];
++        remote_config_t *custom_remote = remotes[i];
+         if (!custom_remote)
+             continue;
+ 
+         custom_remote->factory_code >>= 16;
+-        set_config(custom_remote, device_fd);
+-
+-        for (i = 0; i < 256; i++)
+-            if (custom_remote->key_map[i] != KEY_RESERVED) {
+-                val = (i << 16) | custom_remote->key_map[i];
+-                ioctl(device_fd, REMOTE_IOC_SET_KEY_MAPPING, &val);
+-            }
+-
+-        for (i = 0; i < 256; i++)
+-            if (custom_remote->repeat_key_map[i] != KEY_RESERVED) {
+-                val = (i << 16) | custom_remote->repeat_key_map[i];
+-                ioctl(device_fd, REMOTE_IOC_SET_REPEAT_KEY_MAPPING, &val);
+-            }
+-
+-        for (i = 0; i < 4; i++)
+-            if (custom_remote->mouse_map[i] != 0xffff) {
+-                val = (i << 16) | custom_remote->mouse_map[i];
+-                ioctl(device_fd, REMOTE_IOC_SET_MOUSE_MAPPING, &val);
+-            }
+-
+-        for (i = 0; i < FACTCUSTCODE_MAX; i++)
+-            if (custom_remote->factory_customercode_map[i] != 0xffffffff) {
+-                val = (i << 16) | custom_remote->factory_customercode_map[i];
+-                ioctl(device_fd, REMOTE_IOC_SET_FACTORY_CUSTOMCODE, &val);
+-            }
++		{
++			struct ir_map_tab *meson_remote = (struct ir_map_tab *)malloc(sizeof(struct ir_map_tab) + sizeof(union _codemap) * custom_remote->key_count);
++			int code_pos = 0;
++
++			if (!meson_remote) {
++				printf("Memory allocation for 'meson_remote' failed!\n");
++				return -1;
++			}
++
++			meson_remote->custom_code = custom_remote->factory_code;
++			meson_remote->map_size = custom_remote->key_count;
++			meson_remote->release_delay = custom_remote->repeat_delay;
++			meson_remote->cursor_code.fn_key_scancode = custom_remote->fn_key_scancode;
++			meson_remote->cursor_code.cursor_left_scancode = custom_remote->left_key_scancode;
++			meson_remote->cursor_code.cursor_right_scancode = custom_remote->right_key_scancode;
++			meson_remote->cursor_code.cursor_up_scancode = custom_remote->up_key_scancode;
++			meson_remote->cursor_code.cursor_down_scancode = custom_remote->down_key_scancode;
++			meson_remote->cursor_code.cursor_ok_scancode = custom_remote->ok_key_scancode;
++
++			for (j = 0; j < MAX_KEY_MAPS; j++)
++			{
++				if (custom_remote->key_map[j] != KEY_RESERVED)
++				{
++					union _codemap *code = &meson_remote->codemap[code_pos];
++					code->map.keycode = custom_remote->key_map[j];
++					code->map.scancode = j;
++					code_pos++;
++				}
++			}
++
++			ioctl(device_fd, REMOTE_IOC_SET_KEY_NUMBER, &custom_remote->key_count);
++			ioctl(device_fd, REMOTE_IOC_SET_KEY_MAPPING_TAB, meson_remote);
++
++			free(meson_remote);
++		}
+     }
+ 
+     close(device_fd);
+@@ -229,23 +181,5 @@ int main(int argc, char* argv[])
+     for (i = 0; i < CUSTOM_REMOTE_MAX; i++)
+         free_remote(&remotes[i]);
+ 
+-    device_fd = open(DEVICE_KP, O_RDWR);
+-    if (device_fd >= 0) {
+-        if (adc_move_enable != 0) {
+-            for (i = 0; i < ARRAY_SIZE(adc_map); i++) {
+-                if (adc_map[i] != 0xffff) {
+-                    val = (i << 16) | adc_map[i];
+-                    ioctl(device_fd, KEY_IOC_SET_MOVE_MAP, &val);
+-                    printf("adc_map[%d] = %d ,val = %d \n", i, adc_map[i], val);
+-                }
+-            }
+-        }
+-
+-        ioctl(device_fd, KEY_IOC_SET_MOVE_ENABLE, &adc_move_enable);
+-        printf("adc_move_enable = %d \n", adc_move_enable);
+-
+-        close(device_fd);
+-    }
+-
+     return 0;
+ }
+diff --git a/parsefile.c b/parsefile.c
+index 9d3ef3b..7a3c445 100644
+--- a/parsefile.c
++++ b/parsefile.c
+@@ -2,6 +2,7 @@
+ #include <stdlib.h>
+ #include <string.h>
+ #include "remote_config.h"
++#include "config.h"
+ 
+ #define CC_MAX_LINE_LEN     (400)
+ 
+@@ -68,22 +69,15 @@ static int remote_config_set(char *name, char *value, remote_config_t *config) {
+ enum {
+     CUSTOM_LEVEL,
+     CONFIG_LEVEL,
+-    KEYMAP_LEVEL,
+-    REPEATKEYMAP_LEVEL,
+-    MOUSEMAP_LEVEL,
+-    ADCMAP_LEVEL,
+-	FACTORYCUSTMAP_LEVEL
++    KEYMAP_LEVEL
+ };
+ 
+-extern unsigned short adc_map[2];
+-extern unsigned int adc_move_enable;
+-
+ int get_config_from_file(FILE *fp, remote_config_t *remotes[]) {
+     char line_data_buf[CC_MAX_LINE_LEN];
+     char *name = NULL;
+     char *value;
+     remote_config_t *global_config_remote_data = NULL, *remote = NULL;
+-    unsigned short ircode = 0, keycode = 0,adccode,index,custcode;
++    unsigned short ircode = 0, keycode = 0;
+     unsigned char parse_flag = CONFIG_LEVEL;
+     int remote_count = 0;
+ 
+@@ -124,6 +118,8 @@ int get_config_from_file(FILE *fp, remote_config_t *remotes[]) {
+                 *value++ = 0;
+                 str_trim(&value);
+             }
++			else
++				continue;
+ 
+             str_trim(&name);
+             if (!*name) {
+@@ -138,34 +134,18 @@ int get_config_from_file(FILE *fp, remote_config_t *remotes[]) {
+                 parse_flag = KEYMAP_LEVEL;
+                 continue;
+             }
+-
+-            if (strcasecmp(name, "repeat_key_begin") == 0) {
+-                parse_flag = REPEATKEYMAP_LEVEL;
+-                continue;
+-            }
+-
+-            if (strcasecmp(name, "mouse_begin") == 0) {
+-                parse_flag = MOUSEMAP_LEVEL;
+-                continue;
+-            }
+-		    if (strcasecmp(name, "keyadc_begin") == 0) {
+-                parse_flag = ADCMAP_LEVEL;
+-                continue;
+-            }
+-		    if (strcasecmp(name, "factorycust_begin") == 0) {
+-                parse_flag = FACTORYCUSTMAP_LEVEL;
+-                continue;
+-			}
+             if (strcasecmp(name, "custom_end") == 0) {
+                 remote_count++;
+                 parse_flag = CUSTOM_LEVEL;
+                 continue;
+             }
+             value = strchr(line_data_buf, '=');
+-            if (value) {
+-                *value++ = 0;
+-                str_trim(&value);
+-            }
++			if (value) {
++				*value++ = 0;
++				str_trim(&value);
++			}
++			else
++				continue;
+ 
+             str_trim(&name);
+             if (!*name) {
+@@ -201,116 +181,10 @@ int get_config_from_file(FILE *fp, remote_config_t *remotes[]) {
+             if (keycode) {
+                 remote->key_map[ircode] = keycode;
+                 printf("KEYMAP_LEVEL: ircode = 0x%x, keycode = %d\n", ircode, keycode);
++				remote->key_count++;
+             }
+             continue;
+-        case REPEATKEYMAP_LEVEL:
+-            if (strcasecmp(name, "repeat_key_end") == 0) {
+-                parse_flag = CONFIG_LEVEL;
+-                continue;
+-            }
+-
+-            value = strchr(line_data_buf, ' ');
+-            if (value) {
+-                *value++ = 0;
+-                str_trim(&value);
+-            }
+-
+-            str_trim(&name);
+-            if (!*name) {
+-                continue;
+-            }
+-            ircode = strtoul(name, NULL, 0);
+-            if (ircode > 0xff) {
+-                continue;
+-            }
+-
+-            keycode = strtoul(value, NULL, 0) & 0xffff;
+-            if (keycode) {
+-                remote->repeat_key_map[ircode] = keycode;
+-                printf("REPEATKEYMAP_LEVEL: ircode = 0x%x, keycode = %d\n", ircode, keycode);
+-            }
+-            continue;
+-        case MOUSEMAP_LEVEL:
+-            if (strcasecmp(name, "mouse_end") == 0) {
+-                parse_flag = CONFIG_LEVEL;
+-                continue;
+-            }
+-
+-            value = strchr(line_data_buf, ' ');
+-            if (value) {
+-                *value++ = 0;
+-                str_trim(&value);
+-            }
+-
+-            str_trim(&name);
+-            if (!*name) {
+-                continue;
+-            }
+-            ircode = strtoul(name, NULL, 0);
+-            if (ircode > 3) {
+-                continue;
+-            }
+-
+-            keycode = strtoul(value, NULL, 0) & 0xff;
+-            remote->mouse_map[ircode] = keycode;
+-            printf("MOUSEMAP_LEVEL: ircode = 0x%x, keycode = %d\n", ircode, keycode);
+-            continue;
+-        case ADCMAP_LEVEL:
+-            if (strcasecmp(name, "keyadc_end") == 0) {
+-                parse_flag = CONFIG_LEVEL;
+-                continue;
+-            }
+-
+-            value = strchr(line_data_buf, ' ');
+-            if (value) {
+-                *value++ = 0;
+-                str_trim(&value);
+-            }
+-
+-            str_trim(&name);
+-            if (!*name) {
+-                continue;
+-            }
+-
+-            adccode = strtoul(name, NULL, 0);
+-            if (adccode > 3) {
+-                continue;
+-            }
+-            if (adc_move_enable == 0) {
+-                adc_move_enable = 1;
+-            }
+-
+-            keycode = strtoul(value, NULL, 0) & 0xff;
+-            adc_map[adccode] = keycode;
+-            continue;
+-		case FACTORYCUSTMAP_LEVEL:
+-            if (strcasecmp(name, "factorycust_end") == 0) {
+-                parse_flag = CONFIG_LEVEL;
+-                continue;
+-            }
+-
+-            value = strchr(line_data_buf, ' ');
+-            if (value) {
+-                *value++ = 0;
+-                str_trim(&value);
+-            }
+-
+-            str_trim(&name);
+-            if (!*name) {
+-                continue;
+-            }
+-            index = strtoul(name, NULL, 0);
+-            if (ircode > 0xff) {
+-                continue;
+-            }
+-
+-            custcode = strtoul(value, NULL, 0) & 0xffff;
+-            if (keycode) {
+-                remote->factory_customercode_map[index] = custcode;
+-                printf("FACTORYCUSTMAP_LEVEL: index = 0x%x, custcode = 0x%x\n", index, custcode);
+-            }
+-            continue;
+-        }
++		}
+     }
+     return 0;
+ }
+diff --git a/rc_common.h b/rc_common.h
+new file mode 100644
+index 0000000..762a972
+--- /dev/null
++++ b/rc_common.h
+@@ -0,0 +1,80 @@
++/*
++ * include/uapi/linux/rc_common.h from the kernel directory, but it can be used
++ * in kernel and user space.
++ *
++ * Written by Amlogic
++ *
++ */
++#ifndef _UAPI_RC_COMMON_H_
++#define _UAPI_RC_COMMON_H_
++
++#include <linux/types.h>
++
++#define MAX_KEYMAP_SIZE 256
++#define CUSTOM_NAME_LEN 64
++
++/*to ensure kernel and user spase use the same header file*/
++#define SHARE_DATA_VERSION "v1.1.0"
++
++union _codemap {
++	struct ir_key_map {
++		__u16 keycode;
++		__u16 scancode;
++		} map;
++	__u32 code;
++};
++
++/*
++ *struct cursor_codemap - codemap for mouse mode
++ *
++ *@fn_key_scancode: scancode of fn key which used to swith mode
++ *@cursor_left_scancode: scancode of left key
++ *@cursor_right_scancode: scancode of right key
++ *@cursor_up_scancode: scancode of up key
++ *@cursor_down_scancode: scancode of down key
++ *@cursor_ok_scancode: scancode of ok key
++ */
++struct cursor_codemap {
++	__u16 fn_key_scancode;
++	__u16 cursor_left_scancode;
++	__u16 cursor_right_scancode;
++	__u16 cursor_up_scancode;
++	__u16 cursor_down_scancode;
++	__u16 cursor_ok_scancode;
++};
++
++/**
++ *struct ir_map_table - the IR key map table for different remote-control
++ *
++ *@custom_name: table name
++ *@cursor_code: mouse mode need
++ *@map_size: number of IR key
++ *@custom_code: custom code, identify different key mapping table
++ *@release_delay: release delay time
++ *@codemap[0]: code for IR key
++ */
++struct ir_map_tab {
++	char custom_name[CUSTOM_NAME_LEN];
++	struct cursor_codemap cursor_code;
++	__u16 map_size;
++	__u32 custom_code;
++	__u32 release_delay;
++	union _codemap codemap[0];
++};
++
++/**
++ *struct ir_sw_decode_para - configuration parameters for software decode
++ *
++ *@max_frame_time: maximum frame time
++ */
++struct ir_sw_decode_para {
++	unsigned int  max_frame_time;
++};
++
++/*IOCTL commands*/
++#define REMOTE_IOC_SET_KEY_NUMBER        _IOW('I', 3, __u32)
++#define REMOTE_IOC_SET_KEY_MAPPING_TAB   _IOW('I', 4, __u32)
++#define REMOTE_IOC_SET_SW_DECODE_PARA    _IOW('I', 5, __u32)
++#define REMOTE_IOC_GET_DATA_VERSION      _IOR('I', 121, __u32)
++
++#endif
+diff --git a/remote_config.h b/remote_config.h
+index 7211c2c..3552d1e 100644
+--- a/remote_config.h
++++ b/remote_config.h
+@@ -4,120 +4,53 @@
+ #include <asm/ioctl.h>
+ #include <stdint.h>
+ 
+-#define REMOTE_IOC_UNFCODE_CONFIG            _IOW('I', 12, uint32_t)
+-#define REMOTE_IOC_INFCODE_CONFIG            _IOW('I', 13, uint32_t)
+-#define REMOTE_IOC_RESET_KEY_MAPPING         _IOW('I', 3, uint32_t)
+-#define REMOTE_IOC_SET_KEY_MAPPING           _IOW('I', 4, uint32_t)
+-#define REMOTE_IOC_SET_MOUSE_MAPPING         _IOW('I', 5, uint32_t)
+-#define REMOTE_IOC_SET_REPEAT_DELAY          _IOW('I', 6, uint32_t)
+-#define REMOTE_IOC_SET_REPEAT_PERIOD         _IOW('I', 7, uint32_t)
+-
+-#define REMOTE_IOC_SET_REPEAT_ENABLE         _IOW('I', 8, uint32_t)
+-#define REMOTE_IOC_SET_DEBUG_ENABLE          _IOW('I', 9, uint32_t) 
+-#define REMOTE_IOC_SET_MODE                  _IOW('I', 10, uint32_t) 
+-#define REMOTE_IOC_SET_MOUSE_SPEED           _IOW('I', 11, uint32_t)
+-
+-#define REMOTE_IOC_SET_REPEAT_KEY_MAPPING    _IOW('I', 20, uint32_t)
+-#define REMOTE_IOC_SET_RELEASE_FDELAY        _IOW('I', 97, uint32_t)
+-#define REMOTE_IOC_SET_RELEASE_SDELAY        _IOW('I', 98, uint32_t)
+-#define REMOTE_IOC_SET_RELEASE_DELAY         _IOW('I', 99, uint32_t)
+-#define REMOTE_IOC_SET_CUSTOMCODE            _IOW('I', 100, uint32_t)
+-//reg
+-#define REMOTE_IOC_SET_REG_BASE_GEN          _IOW('I', 101, uint32_t)
+-#define REMOTE_IOC_SET_REG_CONTROL           _IOW('I', 102, uint32_t)
+-#define REMOTE_IOC_SET_REG_LEADER_ACT        _IOW('I', 103, uint32_t)
+-#define REMOTE_IOC_SET_REG_LEADER_IDLE       _IOW('I', 104, uint32_t)
+-#define REMOTE_IOC_SET_REG_REPEAT_LEADER     _IOW('I', 105, uint32_t)
+-#define REMOTE_IOC_SET_REG_BIT0_TIME         _IOW('I', 106, uint32_t)
+-
+-//sw
+-#define REMOTE_IOC_SET_BIT_COUNT             _IOW('I', 107, uint32_t)
+-#define REMOTE_IOC_SET_TW_LEADER_ACT         _IOW('I', 108, uint32_t)
+-#define REMOTE_IOC_SET_TW_BIT0_TIME          _IOW('I', 109, uint32_t)
+-#define REMOTE_IOC_SET_TW_BIT1_TIME          _IOW('I', 110, uint32_t)
+-#define REMOTE_IOC_SET_TW_REPEATE_LEADER     _IOW('I', 111, uint32_t)
+-
+-#define REMOTE_IOC_GET_TW_LEADER_ACT         _IOR('I', 112, uint32_t)
+-#define REMOTE_IOC_GET_TW_BIT0_TIME          _IOR('I', 113, uint32_t)
+-#define REMOTE_IOC_GET_TW_BIT1_TIME          _IOR('I', 114, uint32_t)
+-#define REMOTE_IOC_GET_TW_REPEATE_LEADER     _IOR('I', 115, uint32_t)
+-
+-
+-#define REMOTE_IOC_GET_REG_BASE_GEN          _IOR('I', 121, uint32_t)
+-#define REMOTE_IOC_GET_REG_CONTROL           _IOR('I', 122, uint32_t)
+-#define REMOTE_IOC_GET_REG_LEADER_ACT        _IOR('I', 123, uint32_t)
+-#define REMOTE_IOC_GET_REG_LEADER_IDLE       _IOR('I', 124, uint32_t)
+-#define REMOTE_IOC_GET_REG_REPEAT_LEADER     _IOR('I', 125, uint32_t)
+-#define REMOTE_IOC_GET_REG_BIT0_TIME         _IOR('I', 126, uint32_t)
+-#define REMOTE_IOC_GET_REG_FRAME_DATA        _IOR('I', 127, uint32_t)
+-#define REMOTE_IOC_GET_REG_FRAME_STATUS      _IOR('I', 128, uint32_t)
+-
+-#define REMOTE_IOC_SET_FN_KEY_SCANCODE       _IOW('I', 131, uint32_t) 
+-#define REMOTE_IOC_SET_LEFT_KEY_SCANCODE     _IOW('I', 132, uint32_t)
+-#define REMOTE_IOC_SET_RIGHT_KEY_SCANCODE    _IOW('I', 133, uint32_t)
+-#define REMOTE_IOC_SET_UP_KEY_SCANCODE       _IOW('I', 134, uint32_t)
+-#define REMOTE_IOC_SET_DOWN_KEY_SCANCODE     _IOW('I', 135, uint32_t)
+-#define REMOTE_IOC_SET_OK_KEY_SCANCODE       _IOW('I', 136, uint32_t)
+-#define REMOTE_IOC_SET_PAGEUP_KEY_SCANCODE   _IOW('I', 137, uint32_t)
+-#define REMOTE_IOC_SET_PAGEDOWN_KEY_SCANCODE _IOW('I', 138, uint32_t)
+-
+-#define REMOTE_IOC_SET_TW_BIT2_TIME          _IOW('I', 129, uint32_t)
+-#define REMOTE_IOC_SET_TW_BIT3_TIME          _IOW('I', 130, uint32_t)
+-#define REMOTE_IOC_SET_FACTORY_CUSTOMCODE    _IOW('I', 139, uint32_t)
+-#define ADC_KP_MAGIC 'P'
+-#define KEY_IOC_SET_MOVE_MAP                 _IOW_BAD(ADC_KP_MAGIC,0X02,int)
+-#define KEY_IOC_SET_MOVE_ENABLE              _IOW_BAD(ADC_KP_MAGIC,0X03,int)
+-
+ #define ARRAY_SIZE(x) (sizeof(x) / sizeof((x)[0]))
+ 
+-typedef   struct{
+-       unsigned short *key_map;
+-       unsigned short *repeat_key_map;
+-       unsigned short *mouse_map;
+-	   unsigned int *factory_customercode_map;
+-       unsigned int factory_infcode;
+-       unsigned int factory_unfcode;
+-       unsigned int factory_code;
+-       unsigned int repeat_delay;
+-       unsigned int repeat_peroid;
+-       unsigned int work_mode ;
+-       unsigned int mouse_speed;
++typedef struct {
++	unsigned short *key_map;
++	unsigned int key_count;
++	unsigned int factory_infcode;
++	unsigned int factory_unfcode;
++	unsigned int factory_code;
++	unsigned int repeat_delay;
++	unsigned int repeat_peroid;
++	unsigned int work_mode ;
++	unsigned int mouse_speed;
+ 	unsigned int repeat_enable;
+ 	unsigned int release_delay;
+ 	unsigned int release_fdelay;
+ 	unsigned int release_sdelay;
+ 	unsigned int debug_enable;
+ //sw
+-	unsigned int 	bit_count;
+-	unsigned int 	tw_leader_act;
+-	unsigned int 	tw_bit0;
+-	unsigned int   tw_bit1;
+-	unsigned int   tw_bit2;
+-	unsigned int   tw_bit3;
+-	unsigned int 	tw_repeat_leader;
++	unsigned int bit_count;
++	unsigned int tw_leader_act;
++	unsigned int tw_bit0;
++	unsigned int tw_bit1;
++	unsigned int tw_bit2;
++	unsigned int tw_bit3;
++	unsigned int tw_repeat_leader;
+ //reg
+-	unsigned int  reg_base_gen;
+-	unsigned int  reg_control;
+-	unsigned int  reg_leader_act;
+-	unsigned int  reg_leader_idle;
+-	unsigned int  reg_repeat_leader;
+-	unsigned int  reg_bit0_time;
++	unsigned int reg_base_gen;
++	unsigned int reg_control;
++	unsigned int reg_leader_act;
++	unsigned int reg_leader_idle;
++	unsigned int reg_repeat_leader;
++	unsigned int reg_bit0_time;
+ 
+ 	unsigned int fn_key_scancode;
+-        unsigned int left_key_scancode;
++	unsigned int left_key_scancode;
+ 	unsigned int right_key_scancode;
+ 	unsigned int up_key_scancode;
+ 	unsigned int down_key_scancode;
+ 	unsigned int ok_key_scancode;
+ 	unsigned int pageup_key_scancode;
+ 	unsigned int pagedown_key_scancode;
+-}remote_config_t;
++} remote_config_t;
+ 
+ //these string must in this order and sync with struct remote_config_t
+ extern char*  config_item[33];
+ 
+ extern int malloc_new_remote(remote_config_t **remote);
+-extern int set_config(remote_config_t *remote, int device_fd);
+ extern int get_config_from_file(FILE *fp, remote_config_t *remotes[]);
+ 
+ #endif
+-- 
+2.7.4
+
