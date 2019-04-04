@@ -50,7 +50,6 @@ makeinstall_target() {
         PKG_UBOOTBIN=$(get_build_dir u-boot-${PKG_SUBDEVICE})/fip/u-boot.bin.sd.bin
       fi
       cp -av ${PKG_UBOOTBIN} $INSTALL/usr/share/bootloader/${PKG_SUBDEVICE}_u-boot
-      PKG_CANUPDATE+="|${PKG_SUBDEVICE}*"
     done
     find_file_path bootloader/config.ini && cp -av ${FOUND_PATH} $INSTALL/usr/share/bootloader
       sed -e "s/@PROJECT@/${PKG_CANUPDATE}/g" \
