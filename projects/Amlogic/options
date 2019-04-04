@@ -153,7 +153,7 @@
   # additional packages to install:
   # Space separated list is supported,
   # e.g. ADDITIONAL_PACKAGES="PACKAGE1 PACKAGE2"
-    ADDITIONAL_PACKAGES="autoscript-amlogic dtc u-boot-tools-aml CoreELEC-Debug-Scripts"
+    ADDITIONAL_PACKAGES="dtc u-boot-tools-aml CoreELEC-Debug-Scripts"
 
   # build and install driver addons (yes / no)
     DRIVER_ADDONS_SUPPORT="yes"
@@ -171,4 +171,5 @@
     ENTWARE_ARCH="aarch64-k3.10"
 
   # CoreELEC Subdevices
-    SUBDEVICES="LePotato Odroid_C2 Odroid_N2"
+    #SUBDEVICES="LePotato Odroid_C2 Odroid_N2"
+    SUBDEVICES="Odroid_N2"
