@@ -118,21 +118,12 @@ if [ -f $SYSTEM_ROOT/usr/share/bootloader/${SUBDEVICE}_boot.ini ]; then
   fi
 fi
 
-if [ "${SUBDEVICE}" == "Odroid_C2" ]; then
-  if [ -f $SYSTEM_ROOT/usr/share/bootloader/boot-logo.bmp.gz ]; then
-    echo "Updating boot logo..."
-    cp -p $SYSTEM_ROOT/usr/share/bootloader/boot-logo.bmp.gz $BOOT_ROOT
-  fi
+if [ -f $SYSTEM_ROOT/usr/share/bootloader/boot-logo-1080.bmp.gz ]; then
+  echo "Updating boot logos..."
+  cp -p $SYSTEM_ROOT/usr/share/bootloader/boot-logo-1080.bmp.gz $BOOT_ROOT
 fi
-
-if [ "${SUBDEVICE}" == "LePotato" ]; then
-  if [ -f $SYSTEM_ROOT/usr/share/bootloader/boot-logo-1080.bmp.gz ]; then
-    echo "Updating boot logos..."
-    cp -p $SYSTEM_ROOT/usr/share/bootloader/boot-logo-1080.bmp.gz $BOOT_ROOT
-  fi
-  if [ -f $SYSTEM_ROOT/usr/share/bootloader/timeout-logo-1080.bmp.gz ]; then
-    cp -p $SYSTEM_ROOT/usr/share/bootloader/timeout-logo-1080.bmp.gz $BOOT_ROOT
-  fi
+if [ -f $SYSTEM_ROOT/usr/share/bootloader/timeout-logo-1080.bmp.gz ]; then
+  cp -p $SYSTEM_ROOT/usr/share/bootloader/timeout-logo-1080.bmp.gz $BOOT_ROOT
 fi
 
 if [ -f $SYSTEM_ROOT/usr/share/bootloader/${SUBDEVICE}_u-boot -a ! -e /dev/system -a ! -e /dev/boot ]; then
