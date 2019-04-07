@@ -1,0 +1,94 @@
+diff U3 a/es-app/src/guis/GuiMenu.cpp b/es-app/src/guis/GuiMenu.cpp
+--- a/es-app/src/guis/GuiMenu.cpp	Thu Jun 08 07:58:22 2017
++++ b/es-app/src/guis/GuiMenu.cpp	Thu Jun 08 16:55:16 2017
+@@ -721,42 +721,48 @@
+ 	Window* window = mWindow;
+ 
+ 	ComponentListRow row;
+-	if (UIModeController::getInstance()->isUIModeFull())
+-	{
++	   	/* row.makeAcceptInputHandler([window] {
++				window->pushGui(new GuiMsgBox(window, "QUIT TO KODI? ", "YES",
++					[] {
++					Scripting::fireEvent("quit", "kodi");
++					quitES("");
++				}, "NO", nullptr));
++			});
++			row.addElement(std::make_shared<TextComponent>(window, "START KODI", Font::get(FONT_SIZE_MEDIUM), 0x777777FF), true);
++			s->addRow(row); 
++			 
++			row.elements.clear();*/
++			row.makeAcceptInputHandler([window] {
++				window->pushGui(new GuiMsgBox(window, "QUIT TO RETROARCH? ", "YES",
++					[] {
++					Scripting::fireEvent("quit", "retroarch");
++					quitES("");
++				}, "NO", nullptr));
++			});
++			row.addElement(std::make_shared<TextComponent>(window, "START RETROARCH", Font::get(FONT_SIZE_MEDIUM), 0x777777FF), true);
++			s->addRow(row);
++	
++		row.elements.clear();
+ 		row.makeAcceptInputHandler([window] {
+ 			window->pushGui(new GuiMsgBox(window, "REALLY RESTART?", "YES",
+ 				[] {
+-				Scripting::fireEvent("quit");
+-				if(quitES("/tmp/es-restart") != 0)
++				Scripting::fireEvent("quit", "restart");
++				if(quitES("") != 0)
+ 					LOG(LogWarning) << "Restart terminated with non-zero result!";
+ 			}, "NO", nullptr));
+ 		});
+ 		row.addElement(std::make_shared<TextComponent>(window, "RESTART EMULATIONSTATION", Font::get(FONT_SIZE_MEDIUM), 0x777777FF), true);
+ 		s->addRow(row);
+-
+-
+-
+-		if(Settings::getInstance()->getBool("ShowExit"))
+-		{
+-			row.elements.clear();
+-			row.makeAcceptInputHandler([window] {
+-				window->pushGui(new GuiMsgBox(window, "REALLY QUIT?", "YES",
+-					[] {
+-					Scripting::fireEvent("quit");
+-					quitES("");
+-				}, "NO", nullptr));
+-			});
+-			row.addElement(std::make_shared<TextComponent>(window, "QUIT EMULATIONSTATION", Font::get(FONT_SIZE_MEDIUM), 0x777777FF), true);
+-			s->addRow(row);
+-		}
+-	}
++	if (UIModeController::getInstance()->isUIModeFull())
++	{
++		
+ 	row.elements.clear();
+ 	row.makeAcceptInputHandler([window] {
+ 		window->pushGui(new GuiMsgBox(window, "REALLY RESTART?", "YES",
+ 			[] {
+-			Scripting::fireEvent("quit", "reboot");
++			Scripting::fireEvent("quit", "reboot");
+ 			Scripting::fireEvent("reboot");
+-			if (quitES("/tmp/es-sysrestart") != 0)
++			if (system("systemctl reboot") != 0)
+ 				LOG(LogWarning) << "Restart terminated with non-zero result!";
+ 		}, "NO", nullptr));
+ 	});
+@@ -767,15 +773,15 @@
+ 	row.makeAcceptInputHandler([window] {
+ 		window->pushGui(new GuiMsgBox(window, "REALLY SHUTDOWN?", "YES",
+ 			[] {
+-			Scripting::fireEvent("quit", "shutdown");
++			Scripting::fireEvent("quit", "shutdown");
+ 			Scripting::fireEvent("shutdown");
+-			if (quitES("/tmp/es-shutdown") != 0)
++			if (system("systemctl poweroff") != 0)
+ 				LOG(LogWarning) << "Shutdown terminated with non-zero result!";
+ 		}, "NO", nullptr));
+ 	});
+ 	row.addElement(std::make_shared<TextComponent>(window, "SHUTDOWN SYSTEM", Font::get(FONT_SIZE_MEDIUM), 0x777777FF), true);
+ 	s->addRow(row);
+-
++   }
+ 	mWindow->pushGui(s);
+ }
+ 
