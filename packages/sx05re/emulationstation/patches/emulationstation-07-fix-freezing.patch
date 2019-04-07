@@ -6,8 +6,8 @@ index e6738ab..a8dd9de 100644
  	if(peekGui())
  		peekGui()->updateHelpPrompts();
  
-+	system("chvt 2");
-+	system("chvt 1");
++	system("bash /storage/.emulationstation/scripts/pixel.sh");
++	/*system("chvt 1");*/
  	return true;
  }
  
