@@ -47,7 +47,7 @@ function fade_out() {
 function fade_in() {
     # Start music and fading in
     $VOLUMEZERO
-    systemd-run $MUSICPLAYER -r 32000 -Z $BGMPATH
+    systemd-run $MUSICPLAYER -Z $BGMPATH
     FADEVOLUME=10
     until [[ $FADEVOLUME -ge $VOLUMEALSA ]]; do
         set_step
